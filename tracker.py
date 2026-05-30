@@ -10,7 +10,7 @@ Build .app:   python3 setup.py py2app
 import json
 import os
 import subprocess
-import sys
+import tempfile
 from datetime import date, datetime
 from pathlib import Path
 
@@ -212,14 +212,28 @@ class TimeTrackerApp(rumps.App):
             if response == 1:
                 self._add_commits(poll_git_commits(self.config["git_repos"]))
 
-        text = generate_summary(self.day_data)
-        # Copy to clipboard so it's ready to paste straight into the timesheet
-        subprocess.run(["pbcopy"], input=text.encode())
-        rumps.alert(
-            title="Today's Summary",
-            message=text + "\n\n(Copied to clipboard ✓)",
-            ok="Close",
-        )
+        try:
+            text = generate_summary(self.day_data)
+
+            # Copy to clipboard so it's ready to paste into the timesheet
+            subprocess.run(["pbcopy"], input=text.encode("utf-8"))
+
+            # Write to a temp file and open in the default text editor
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                suffix=".txt",
+                prefix="time-tracker-",
+                delete=False,
+                encoding="utf-8",
+            ) as f:
+                f.write(text)
+                f.write("\n\n(Copied to clipboard ✓)")
+                tmp_path = f.name
+
+            subprocess.run(["open", "-t", tmp_path])
+
+        except Exception as e:
+            rumps.alert(title="Error", message=str(e), ok="Close")
 
     def open_config(self, _):
         """Open config.json in the default text editor."""

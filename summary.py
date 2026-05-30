@@ -29,9 +29,10 @@ def generate_summary(day_data):
     if not events and not commits:
         return "No activity tracked today."
 
-    # Tally up time and window titles per category
+    # Aggregate time per category, then per app within each category
     cat_seconds = defaultdict(float)
-    cat_titles = defaultdict(set)
+    cat_app_seconds = defaultdict(lambda: defaultdict(float))
+    cat_app_titles = defaultdict(lambda: defaultdict(set))
 
     for event in events:
         start = datetime.fromisoformat(event["start"])
@@ -39,24 +40,37 @@ def generate_summary(day_data):
         duration = (end - start).total_seconds()
 
         cat = event["category"]
-        cat_seconds[cat] += duration
+        app = event["app"]
 
-        # Window title is more useful than app name (e.g. "PROJ-42 — Jira" vs "Chrome")
+        cat_seconds[cat] += duration
+        cat_app_seconds[cat][app] += duration
+
+        # Only store the window title if it adds info beyond the app name
         title = event.get("title", "")
-        if title and title != event["app"]:
-            cat_titles[cat].add(title)
+        if title and title != app and app.lower() not in title.lower():
+            cat_app_titles[cat][app].add(title)
 
     # Sort categories: most time first
     sorted_cats = sorted(cat_seconds.items(), key=lambda x: x[1], reverse=True)
 
-    date_str = datetime.now().strftime("%a %b %-d")
-    lines = [f"=== {date_str} — Daily Summary ===", ""]
+    date_str = datetime.now().strftime("%A, %B %-d")
+    lines = [f"Daily Summary — {date_str}", ""]
 
     for cat, seconds in sorted_cats:
-        # Cap at 3 titles so the summary stays readable
-        titles = sorted(cat_titles[cat])[:3]
-        title_str = f"  —  {', '.join(titles)}" if titles else ""
-        lines.append(f"[{cat:<8}]  {format_duration(seconds)}{title_str}")
+        lines.append(f"{cat.upper()}  {format_duration(seconds)}")
+
+        # Sort apps within the category by time spent, most first
+        sorted_apps = sorted(
+            cat_app_seconds[cat].items(), key=lambda x: x[1], reverse=True
+        )
+        for app, app_seconds in sorted_apps:
+            lines.append(f"  • {app}  {format_duration(app_seconds)}")
+            # Show up to 2 distinct window titles under each app
+            titles = sorted(cat_app_titles[cat][app])[:2]
+            for title in titles:
+                lines.append(f"    – {title}")
+
+        lines.append("")
 
     if commits:
         lines.append("\nGit commits:")
