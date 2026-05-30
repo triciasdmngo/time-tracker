@@ -12,10 +12,12 @@ Drag it to /Applications, then launch it from there.
 from setuptools import setup
 
 APP = ["tracker.py"]
+DATA_FILES = ["clock_menubar.png"]
 
 OPTIONS = {
     # argv_emulation must be False for menu bar (LSUIElement) apps
     "argv_emulation": False,
+    "iconfile": "AppIcon.icns",
     "packages": ["rumps"],
     "plist": {
         # Hides the app from the Dock — it lives in the menu bar only
@@ -38,6 +40,7 @@ OPTIONS = {
 setup(
     name="Time Tracker",
     app=APP,
+    data_files=DATA_FILES,
     options={"py2app": OPTIONS},
     setup_requires=["py2app"],
 )

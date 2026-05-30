@@ -10,8 +10,14 @@ Build .app:   python3 setup.py py2app
 import json
 import os
 import subprocess
+import sys
 from datetime import date, datetime
 from pathlib import Path
+
+
+def resource_path(filename):
+    """Returns the correct path to a resource file in both dev and bundled modes."""
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
 
 import rumps
 
@@ -88,7 +94,7 @@ def save_day(path, data):
 class TimeTrackerApp(rumps.App):
 
     def __init__(self):
-        super().__init__("⏱", quit_button=None)
+        super().__init__("Time Tracker", icon=resource_path("clock_menubar.png"), template=False, quit_button=None)
 
         self.config = load_config()
         self._today = date.today().isoformat()
