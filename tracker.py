@@ -123,9 +123,6 @@ class TimeTrackerApp(rumps.App):
             rumps.MenuItem("Quit", callback=self.on_quit),
         ]
 
-        # Pull any commits that already happened before we launched
-        if self.cfg["git_repos"]:
-            self._add_commits(poll_git_commits(self.cfg["git_repos"]))
 
     # ── Timers ────────────────────────────────────────────────────────────────
     # rumps.timer runs the method on a background thread at the given interval.
@@ -165,12 +162,6 @@ class TimeTrackerApp(rumps.App):
         category = self.cfg["app_categories"].get(app, "other")
         self._status_item.title = f"Tracking: {app}  ({category})"
 
-    @rumps.timer(300)
-    def on_git_tick(self, _):
-        """Poll configured git repos every 5 minutes."""
-        if self.cfg["git_repos"]:
-            self._add_commits(poll_git_commits(self.cfg["git_repos"]))
-
     @rumps.timer(30)
     def on_save_tick(self, _):
         """Flush and save to disk every 30 seconds."""
@@ -203,6 +194,18 @@ class TimeTrackerApp(rumps.App):
 
     def show_summary(self, _):
         self._flush()
+
+        # Only offer git commits if repos are configured
+        if self.cfg["git_repos"]:
+            response = rumps.alert(
+                title="Include git commits?",
+                message="Fetch today's commits from your configured repos and add them to the summary?",
+                ok="Yes",
+                cancel="No",
+            )
+            if response == 1:
+                self._add_commits(poll_git_commits(self.cfg["git_repos"]))
+
         text = generate_summary(self.day_data)
         # Copy to clipboard so it's ready to paste straight into the timesheet
         subprocess.run(["pbcopy"], input=text.encode())

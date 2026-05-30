@@ -193,7 +193,7 @@ Tracking: Cursor  (dev)
 
 ### Get today's summary
 
-Click **⏱ → Show Today's Summary**. A dialog appears with the full breakdown, and the text is automatically copied to your clipboard so you can paste it straight into your timesheet.
+Click **⏱ → Show Today's Summary**. If you have git repos configured, you'll be asked first whether to include today's commits — yes or no, your choice. A dialog then appears with the full breakdown, and the text is automatically copied to your clipboard so you can paste it straight into your timesheet.
 
 ```
 === Fri May 30 — Daily Summary ===
@@ -209,9 +209,11 @@ Git commits:
 Total tracked: 4h 35m
 ```
 
+If you say no to git commits, or have no repos configured, the summary shows app activity only.
+
 ### End-of-day reminder
 
-At your configured `reminder_time` a macOS notification fires with a short preview. The full summary is also ready via the menu.
+At your configured `reminder_time` a macOS notification fires with a short preview of your app activity. For the full breakdown including git commits, click **⏱ → Show Today's Summary**.
 
 ### Change settings on the fly
 
