@@ -59,7 +59,7 @@ def poll_git_commits(repo_paths):
                 "git", "-C", path,
                 "log",
                 f"--since={since}",
-                "--format=%H|||%aI|||%s",
+                "--format=%H|||%aI|||%s|||%D",
                 "--no-merges",
             ],
             capture_output=True,
@@ -74,20 +74,30 @@ def poll_git_commits(repo_paths):
         for line in result.stdout.strip().splitlines():
             if not line:
                 continue
-            parts = line.split("|||", 2)
-            if len(parts) != 3:
+            parts = line.split("|||", 3)
+            if len(parts) != 4:
                 continue
-            hash_, iso_time, message = parts
+            hash_, iso_time, message, refs = parts
             try:
                 commit_time = datetime.fromisoformat(iso_time)
             except ValueError:
                 continue
+
+            # %D gives refs like "HEAD -> feat/user-auth, origin/feat/user-auth"
+            # Extract just the local branch name (the part after "HEAD -> ")
+            branch = ""
+            for ref in refs.split(","):
+                ref = ref.strip()
+                if ref.startswith("HEAD ->"):
+                    branch = ref.replace("HEAD ->", "").strip()
+                    break
 
             commits.append({
                 "hash": hash_[:7],
                 "time": commit_time.isoformat(),
                 "message": message,
                 "repo": repo_name,
+                "branch": branch,
             })
 
     return commits

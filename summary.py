@@ -62,7 +62,10 @@ def generate_summary(day_data):
         lines.append("\nGit commits:")
         for c in sorted(commits, key=lambda x: x["time"]):
             t = datetime.fromisoformat(c["time"]).strftime("%H:%M")
-            lines.append(f"  {t}  [{c['repo']}] {c['message']}")
+            location = c["repo"]
+            if c.get("branch"):
+                location = f"{c['repo']} · {c['branch']}"
+            lines.append(f"  {t}  [{location}] {c['message']}")
 
     total = sum(cat_seconds.values())
     lines.append(f"\nTotal tracked: {format_duration(total)}")

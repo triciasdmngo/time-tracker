@@ -59,14 +59,14 @@ def load_config():
     if not CONFIG_FILE.exists():
         CONFIG_FILE.write_text(json.dumps(DEFAULT_CONFIG, indent=2))
     with open(CONFIG_FILE) as f:
-        cfg = json.load(f)
+        config = json.load(f)
     for key, value in DEFAULT_CONFIG.items():
-        cfg.setdefault(key, value)
-    return cfg
+        config.setdefault(key, value)
+    return config
 
 
-def day_file(cfg, date_str):
-    data_dir = Path(os.path.expanduser(cfg["data_dir"]))
+def day_file(config, date_str):
+    data_dir = Path(os.path.expanduser(config["data_dir"]))
     data_dir.mkdir(parents=True, exist_ok=True)
     return data_dir / f"{date_str}.json"
 
@@ -90,9 +90,9 @@ class TimeTrackerApp(rumps.App):
     def __init__(self):
         super().__init__("⏱", quit_button=None)
 
-        self.cfg = load_config()
+        self.config = load_config()
         self._today = date.today().isoformat()
-        self._day_path = day_file(self.cfg, self._today)
+        self._day_path = day_file(self.config, self._today)
         self.day_data = load_day(self._day_path)
 
         # Current session state
@@ -102,7 +102,7 @@ class TimeTrackerApp(rumps.App):
         self._reminder_sent = False
 
         # If we launch after the reminder time, don't fire a stale notification
-        reminder_str = self.cfg.get("reminder_time", "")
+        reminder_str = self.config.get("reminder_time", "")
         if reminder_str:
             reminder_dt = datetime.strptime(
                 f"{self._today} {reminder_str}", "%Y-%m-%d %H:%M"
@@ -143,7 +143,7 @@ class TimeTrackerApp(rumps.App):
             self._flush()
             save_day(self._day_path, self.day_data)
             self._today = today_str
-            self._day_path = day_file(self.cfg, today_str)
+            self._day_path = day_file(self.config, today_str)
             self.day_data = load_day(self._day_path)
             self._reminder_sent = False
 
@@ -159,7 +159,7 @@ class TimeTrackerApp(rumps.App):
             self._current_title = title
             self._session_start = now
 
-        category = self.cfg["app_categories"].get(app, "other")
+        category = self.config["app_categories"].get(app, "other")
         self._status_item.title = f"Tracking: {app}  ({category})"
 
     @rumps.timer(30)
@@ -173,7 +173,7 @@ class TimeTrackerApp(rumps.App):
         """Check once a minute whether it's time to send the reminder."""
         if self._reminder_sent:
             return
-        reminder_str = self.cfg.get("reminder_time", "")
+        reminder_str = self.config.get("reminder_time", "")
         if not reminder_str:
             return
         now = datetime.now()
@@ -196,7 +196,7 @@ class TimeTrackerApp(rumps.App):
         self._flush()
 
         # Only offer git commits if repos are configured
-        if self.cfg["git_repos"]:
+        if self.config["git_repos"]:
             response = rumps.alert(
                 title="Include git commits?",
                 message="Fetch today's commits from your configured repos and add them to the summary?",
@@ -204,7 +204,7 @@ class TimeTrackerApp(rumps.App):
                 cancel="No",
             )
             if response == 1:
-                self._add_commits(poll_git_commits(self.cfg["git_repos"]))
+                self._add_commits(poll_git_commits(self.config["git_repos"]))
 
         text = generate_summary(self.day_data)
         # Copy to clipboard so it's ready to paste straight into the timesheet
@@ -221,9 +221,9 @@ class TimeTrackerApp(rumps.App):
 
     def reload_config(self, _):
         """Re-read config.json without restarting the app."""
-        self.cfg = load_config()
+        self.config = load_config()
         # Re-evaluate reminder state in case reminder_time changed
-        reminder_str = self.cfg.get("reminder_time", "")
+        reminder_str = self.config.get("reminder_time", "")
         if reminder_str:
             today = date.today().isoformat()
             reminder_dt = datetime.strptime(
@@ -243,14 +243,14 @@ class TimeTrackerApp(rumps.App):
     def _commit_session(self, end):
         """Save the current session to day_data if it lasted long enough."""
         elapsed = (end - self._session_start).total_seconds()
-        if elapsed < self.cfg["min_session_seconds"]:
+        if elapsed < self.config["min_session_seconds"]:
             return
         self.day_data["events"].append({
             "start": self._session_start.isoformat(),
             "end": end.isoformat(),
             "app": self._current_app,
             "title": self._current_title,
-            "category": self.cfg["app_categories"].get(self._current_app, "other"),
+            "category": self.config["app_categories"].get(self._current_app, "other"),
         })
 
     def _flush(self):
