@@ -10,6 +10,7 @@ It captures the active app and window title every 2 seconds, buckets them into c
 ├─ ─────────────────────────
 ├─ Show Today's Summary
 ├─ Open Config
+├─ Reload Config
 ├─ ─────────────────────────
 └─ Quit
 ```
@@ -25,13 +26,30 @@ It captures the active app and window title every 2 seconds, buckets them into c
 
 ## Setup
 
-### 1. Install dependencies
+All commands below should be run from inside the project folder:
 
 ```bash
-pip install rumps py2app
+cd ~/Documents/projects/time-tracker
 ```
 
-### 2. Build the app
+### 1. Create a virtual environment
+
+A virtual environment keeps the app's dependencies isolated from the rest of your system. You only need to do this once.
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+You'll see `(.venv)` appear in your terminal prompt — that means it's active.
+
+### 2. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Build the app
 
 ```bash
 python3 setup.py py2app
@@ -39,7 +57,7 @@ python3 setup.py py2app
 
 This creates `dist/Time Tracker.app`. Drag it to `/Applications`.
 
-### 3. Grant Accessibility permission
+### 4. Grant Accessibility permission
 
 The tracker uses AppleScript to read the active window title. macOS requires you to allow this once:
 
@@ -48,44 +66,56 @@ The tracker uses AppleScript to read the active window title. macOS requires you
 
 Because you're running it as a standalone app rather than through Terminal, the permission is scoped only to this app.
 
-### 4. Launch it
+### 5. Launch it
 
 Open **Time Tracker** from `/Applications`. You'll see the ⏱ icon appear in your menu bar.
 
 ---
 
-## Development (no build needed)
+## Development (running without building)
 
-If you want to run the tracker directly from the terminal while working on it:
+If you want to run the tracker directly from the terminal — for example while making changes to the code — use this workflow instead of building the app each time.
 
 ```bash
-# 1. Create a virtual environment (one-time setup)
+# Navigate to the project folder
+cd ~/Documents/projects/time-tracker
+
+# Create a virtual environment (one-time setup)
 python3 -m venv .venv
 
-# 2. Activate it — you'll see (.venv) in your prompt when it's active
+# Activate it — you'll see (.venv) in your prompt when it's active
 source .venv/bin/activate
 
-# 3. Install dependencies
-pip install rumps py2app
+# Install dependencies (one-time setup)
+pip install -r requirements.txt
 
-# 4. Run the tracker
+# Run the tracker
 python3 tracker.py
 ```
 
-To deactivate the venv when you're done:
+Each time you open a new terminal window, you'll need to activate the venv again before running the tracker:
+
+```bash
+cd ~/Documents/projects/time-tracker
+source .venv/bin/activate
+python3 tracker.py
+```
+
+To deactivate the venv when you're done working on the code:
+
 ```bash
 deactivate
 ```
 
-You need to run `source .venv/bin/activate` each time you open a new terminal session before running the tracker. The `.venv/` folder is already in `.gitignore` so it won't be committed.
-
-Note: in dev mode, macOS will prompt for Accessibility access for your terminal app instead of Time Tracker.
+> **Note:** In dev mode, macOS will prompt for Accessibility access for your terminal app instead of Time Tracker.
 
 ---
 
 ## Configuration
 
-Click **⏱ → Open Config** in the menu bar, or edit `~/.time-tracker/config.json` directly. The file is created automatically on first launch.
+Click **⏱ → Open Config** to open the config file in your default editor. When you're done editing, save the file and click **⏱ → Reload Config** to apply changes without restarting the app.
+
+The config file lives at `~/.time-tracker/config.json` and is created automatically on first launch. It looks like this:
 
 ```json
 {
@@ -93,7 +123,28 @@ Click **⏱ → Open Config** in the menu bar, or edit `~/.time-tracker/config.j
   "git_repos": [],
   "min_session_seconds": 15,
   "data_dir": "~/.time-tracker",
-  "app_categories": { ... }
+  "app_categories": {
+    "Code": "dev",
+    "Cursor": "dev",
+    "Xcode": "dev",
+    "Terminal": "dev",
+    "iTerm2": "dev",
+    "Warp": "dev",
+    "Ghostty": "dev",
+    "Zoom": "meeting",
+    "FaceTime": "meeting",
+    "Microsoft Teams": "meeting",
+    "Slack": "comms",
+    "Mail": "comms",
+    "Messages": "comms",
+    "Notion": "docs",
+    "Pages": "docs",
+    "Microsoft Word": "docs",
+    "Google Chrome": "other",
+    "Safari": "other",
+    "Firefox": "other",
+    "Arc": "other"
+  }
 }
 ```
 
@@ -107,6 +158,8 @@ Click **⏱ → Open Config** in the menu bar, or edit `~/.time-tracker/config.j
 
 ### Adding your git repos
 
+Find the `"git_repos"` line in your config file and add the paths to your repos:
+
 ```json
 "git_repos": [
   "~/Documents/projects/my-app",
@@ -116,12 +169,13 @@ Click **⏱ → Open Config** in the menu bar, or edit `~/.time-tracker/config.j
 
 ### Adding an app that isn't listed
 
-If an app isn't in `app_categories` it gets filed under `other`. Add it using the exact name that appears in the menu bar when that app is focused.
+If an app isn't in `app_categories` it gets filed under `other`. To categorize it, add a new line inside the `"app_categories"` section. The name must match exactly what appears in the menu bar when that app is focused.
 
 ```json
 "app_categories": {
   "Figma": "design",
-  "TablePlus": "dev"
+  "TablePlus": "dev",
+  ... (rest of the existing entries)
 }
 ```
 
@@ -131,7 +185,8 @@ If an app isn't in `app_categories` it gets filed under `other`. Add it using th
 
 ### Check what you're tracking
 
-The menu bar item shows the current app and category in real time:
+The menu bar shows the current app and category, updated every 2 seconds:
+
 ```
 Tracking: Cursor  (dev)
 ```
@@ -158,9 +213,32 @@ Total tracked: 4h 35m
 
 At your configured `reminder_time` a macOS notification fires with a short preview. The full summary is also ready via the menu.
 
+### Change settings on the fly
+
+1. Click **⏱ → Open Config** — opens `config.json` in your default editor
+2. Edit and save the file
+3. Click **⏱ → Reload Config** — changes take effect immediately, no restart needed
+
+If you changed `reminder_time` to something still in the future, the reminder is also reset so it fires at the new time.
+
 ### Quit
 
 Click **⏱ → Quit**. The current session is saved before exit.
+
+---
+
+## Transferring to another Mac
+
+The `.app` bundle is self-contained — it includes everything it needs to run. To move it to another machine (e.g. your work Mac mini):
+
+1. Copy `dist/Time Tracker.app` to the other Mac (AirDrop, USB, etc.)
+2. Drag it into `/Applications`
+3. Launch it once — this creates a fresh `~/.time-tracker/config.json` on that machine
+4. Click **⏱ → Open Config** to configure it (reminder time, git repos, etc.)
+5. Go to **System Settings → Privacy & Security → Accessibility** and add Time Tracker
+6. Optionally add it to **System Settings → General → Login Items** so it starts automatically on login
+
+The other Mac does not need Python installed.
 
 ---
 
@@ -174,9 +252,9 @@ Each day's activity is saved to `~/.time-tracker/YYYY-MM-DD.json`. The file is w
 
 ```
 time-tracker/
-├── tracker.py      Menu bar app — timers, menus, session tracking
-├── watcher.py      Talks to macOS: active window (AppleScript) + git commits
-├── summary.py      Builds the summary text and sends the notification
-├── setup.py        Build script for creating the .app bundle
-└── requirements.txt  rumps (menu bar), py2app (build)
+├── tracker.py       Menu bar app — timers, menus, session tracking
+├── watcher.py       Talks to macOS: active window (AppleScript) + git commits
+├── summary.py       Builds the summary text and sends the notification
+├── setup.py         Build script for creating the .app bundle
+└── requirements.txt Dependencies: rumps (menu bar UI), py2app (build tool)
 ```

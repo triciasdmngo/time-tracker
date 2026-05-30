@@ -118,6 +118,7 @@ class TimeTrackerApp(rumps.App):
             None,
             rumps.MenuItem("Show Today's Summary", callback=self.show_summary),
             rumps.MenuItem("Open Config", callback=self.open_config),
+            rumps.MenuItem("Reload Config", callback=self.reload_config),
             None,
             rumps.MenuItem("Quit", callback=self.on_quit),
         ]
@@ -214,6 +215,20 @@ class TimeTrackerApp(rumps.App):
     def open_config(self, _):
         """Open config.json in the system default editor."""
         subprocess.run(["open", str(CONFIG_FILE)])
+
+    def reload_config(self, _):
+        """Re-read config.json without restarting the app."""
+        self.cfg = load_config()
+        # Re-evaluate reminder state in case reminder_time changed
+        reminder_str = self.cfg.get("reminder_time", "")
+        if reminder_str:
+            today = date.today().isoformat()
+            reminder_dt = datetime.strptime(
+                f"{today} {reminder_str}", "%Y-%m-%d %H:%M"
+            )
+            if datetime.now() < reminder_dt:
+                self._reminder_sent = False  # reset so it fires at the new time
+        rumps.notification("Time Tracker", "", "Config reloaded.")
 
     def on_quit(self, _):
         self._flush()
