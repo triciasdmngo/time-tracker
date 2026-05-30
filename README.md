@@ -1,8 +1,10 @@
 # time-tracker
 
-A macOS menu bar app that watches what you're working on throughout the day and reminds you to log your timesheet at a set time.
+A macOS menu bar app that watches what you're working on throughout the day and reminds you to log your timesheet at a set time. Built because I always forget to log my time and struggle keeping my timesheets up-to-date.
 
-It captures the active app and window title every 2 seconds, buckets them into categories (dev, meeting, comms, docs), and optionally reads your git commits. At your configured reminder time, it fires a macOS notification. You can also pull up the summary any time from the menu bar icon.
+**What it does:** It captures the active app and window title every 2 seconds, buckets them into categories (dev, meeting, comms, docs), and optionally reads your git commits. At your configured reminder time, it fires a macOS notification. You can also pull up the summary any time from the menu bar icon.
+
+**Disclaimer:** Initially written in Go, then rewritten in Python as a learning project with the help of Claude Sonnet 4.6. The code works but may not follow all Python best practices. I'm learning as I go.
 
 ```
 ⏱
@@ -148,13 +150,13 @@ The config file lives at `~/.time-tracker/config.json` and is created automatica
 }
 ```
 
-| Key | What it does |
-|---|---|
-| `reminder_time` | 24h time when the notification fires, e.g. `"17:30"` for 5:30 PM |
-| `git_repos` | List of repo paths to scan for today's commits |
-| `min_session_seconds` | Ignore app switches shorter than this (filters out quick glances) |
-| `data_dir` | Where daily JSON files are saved |
-| `app_categories` | Maps app names to categories: `dev`, `meeting`, `comms`, `docs`, `other` |
+| Key                   | What it does                                                             |
+| --------------------- | ------------------------------------------------------------------------ |
+| `reminder_time`       | 24h time when the notification fires, e.g. `"17:30"` for 5:30 PM         |
+| `git_repos`           | List of repo paths to scan for today's commits                           |
+| `min_session_seconds` | Ignore app switches shorter than this (filters out quick glances)        |
+| `data_dir`            | Where daily JSON files are saved                                         |
+| `app_categories`      | Maps app names to categories: `dev`, `meeting`, `comms`, `docs`, `other` |
 
 ### Adding your git repos
 
