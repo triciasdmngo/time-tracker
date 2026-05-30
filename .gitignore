@@ -3,3 +3,5 @@ time_data.json
 build/
 dist/
 *.egg-info/
+__pycache__/
+*.pyc

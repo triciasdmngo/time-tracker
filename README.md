@@ -233,10 +233,11 @@ The `.app` bundle is self-contained — it includes everything it needs to run. 
 
 1. Copy `dist/Time Tracker.app` to the other Mac (AirDrop, USB, etc.)
 2. Drag it into `/Applications`
-3. Launch it once — this creates a fresh `~/.time-tracker/config.json` on that machine
-4. Click **⏱ → Open Config** to configure it (reminder time, git repos, etc.)
-5. Go to **System Settings → Privacy & Security → Accessibility** and add Time Tracker
-6. Optionally add it to **System Settings → General → Login Items** so it starts automatically on login
+3. **First launch only:** the app isn't code-signed, so macOS will block it with a warning. To get past this: instead of double-clicking, **right-click → Open** and confirm. macOS remembers this choice and won't ask again.
+4. The app launches and creates a fresh `~/.time-tracker/config.json` on that machine
+5. Click **⏱ → Open Config** to configure it (reminder time, git repos, etc.)
+6. Go to **System Settings → Privacy & Security → Accessibility** and add Time Tracker
+7. Optionally add it to **System Settings → General → Login Items** so it starts automatically on login
 
 The other Mac does not need Python installed.
 
