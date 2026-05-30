@@ -222,8 +222,8 @@ class TimeTrackerApp(rumps.App):
         )
 
     def open_config(self, _):
-        """Open config.json in the system default editor."""
-        subprocess.run(["open", str(CONFIG_FILE)])
+        """Open config.json in the default text editor."""
+        subprocess.run(["open", "-t", str(CONFIG_FILE)])
 
     def reload_config(self, _):
         """Re-read config.json without restarting the app."""
